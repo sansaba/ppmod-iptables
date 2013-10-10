@@ -1,0 +1,50 @@
+#FIREWALL CONFIGURATION - THIS IS THE WRONG WAY TO DO THIS
+
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+-A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+
+<% if @hostname == 'nagiosserver' %>
+-A INPUT -p udp -m udp --dport 53 -j ACCEPT
+-A INPUT -p tcp -m udp --dport 53 -j ACCEPT
+<% end %>
+
+<% if @httpport == true %>
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+<% end %>
+
+<% if @hostname == 'syslogserver' %>
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 514 -j ACCEPT
+<% end %>
+
+<% if @hostname == 'nagiosserver' %>
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 953 -j ACCEPT
+<% end %>
+
+<% if @dbport == true %>
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 3306 -j ACCEPT
+<% end %>
+
+<% if @hostname == 'sandbox' %>
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 5000 -j ACCEPT
+<% end %>
+
+-A INPUT -s 192.10.10.10 -p tcp --dport 5666 -j ACCEPT
+-A INPUT -s 10.10.10.10 -p tcp --dport 5666 -j ACCEPT
+
+<% if @hostname == 'puppetserver' %>
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 8140 -j ACCEPT
+<% end %>
+
+<% if @hostname != 'syslogserver' %>
+-A INPUT -m state --state NEW -m tcp -p tcp --dport 62222 -j ACCEPT
+<% end %>
+
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+
+COMMIT
